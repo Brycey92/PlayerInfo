@@ -2,11 +2,9 @@
 using System;
 using System.Collections.Generic;
 using Terraria;
-using Terraria.Localization;
 using TerrariaApi.Server;
 using TShockAPI;
 using System.Linq;
-using System.IO;
 
 namespace PlayerInfo
 {
@@ -16,7 +14,7 @@ namespace PlayerInfo
 	{
 		public override Version Version
 		{
-			get { return new Version(1, 7); }
+			get { return new Version(1, 8); }
 		}
 
 		public override string Name
@@ -31,7 +29,7 @@ namespace PlayerInfo
 
 		public override string Description
 		{
-			get { return "An info changer for player eg name, hp and mana!"; }
+			get { return "An info changer for player eg name, HP and mana!"; }
 		}
 
 		public PlayerInfo(Main game)
@@ -42,7 +40,7 @@ namespace PlayerInfo
 
 		public override void Initialize()
 		{
-			Commands.ChatCommands.Add(new Command("playerinfo.hpnmana", setstats, "stats"));
+			Commands.ChatCommands.Add(new Command("playerinfo.hpnmana", SetStats, "stats"));
 			Commands.ChatCommands.Add(new Command("playerinfo.selfname", SelfName, "nick", "name"));
 			Commands.ChatCommands.Add(new Command("playerinfo.checkinfo", CheckInfo, "checkinfo", "cinfo"));
 		}
@@ -52,30 +50,30 @@ namespace PlayerInfo
 			TSPlayer plr = args.Player;
 			if (args.Parameters.Count != 1)
 			{
-				plr.SendErrorMessage("Invalid Syntax! Corrext Syntax: /checkinfo <player>");
+				plr.SendErrorMessage("Invalid Syntax! Proper Syntax: /checkinfo <player>");
 				return;
 			}
-			var foundplr = TShock.Utils.FindPlayer(args.Parameters[0]);
-			if (foundplr.Count == 0)
+			var foundPlr = TSPlayer.FindByNameOrID(args.Parameters[0]);
+			if (foundPlr.Count == 0)
 			{
 				args.Player.SendErrorMessage("Invalid player!");
 				return;
 			}
 			else {
-				var iPlayer = foundplr[0];
+				var iPlayer = foundPlr[0];
 				string name = iPlayer.Name;
 				var hp = iPlayer.TPlayer.statLifeMax2;
 				var mana = iPlayer.TPlayer.statManaMax2;
-				var currenthp = iPlayer.TPlayer.statLife;
-				var currentmana = iPlayer.TPlayer.statMana;
-				var groupname = iPlayer.Group.Name;
-				var groupprefix = iPlayer.Group.Prefix;
-				string array = "Name: " + name + "\nHP: " + hp + ", Current HP: " + currenthp + "\nMana: " + mana + ", Current Mana: " + currentmana + "\nGroup: " + groupname + ", Group Prefix: " + groupprefix;
+				var currentHp = iPlayer.TPlayer.statLife;
+				var currentMana = iPlayer.TPlayer.statMana;
+				var groupName = iPlayer.Group.Name;
+				var groupPrefix = iPlayer.Group.Prefix;
+				string array = "Name: " + name + "\nHP: " + hp + ", Current HP: " + currentHp + "\nMana: " + mana + ", Current Mana: " + currentMana + "\nGroup: " + groupName + ", Group Prefix: " + groupPrefix;
 				plr.SendMessage(array, Color.LightSteelBlue);
 			}
 		}
 
-		void setstats(CommandArgs args)
+		void SetStats(CommandArgs args)
 		{
 			if (args.Parameters.Count < 3 || args.Parameters.Count > 4)
 			{
@@ -84,20 +82,20 @@ namespace PlayerInfo
 			}
 			int health = 0;
 			int mana = 0;
-			var foundplr = TShock.Utils.FindPlayer(args.Parameters[0]);
-			if (foundplr.Count == 0)
+			var foundPlr = TSPlayer.FindByNameOrID(args.Parameters[0]);
+			if (foundPlr.Count == 0)
 			{
 				args.Player.SendErrorMessage("Invalid player!");
 				return;
 			}
 			//            if (foundplr.Count > 1)
 			//            {
-			//                TShock.Utils.SendMultipleMatchError(args.Player, foundplr.Select(p => p.Name));
+			//                TShock.Utils.SendMultipleMatchError(args.Player, foundPlr.Select(p => p.Name));
 			//                return;
 			//            }
 			else
 			{
-				var iPlayer = foundplr[0];
+				var iPlayer = foundPlr[0];
 				if (!int.TryParse(args.Parameters[1], out health))
 				{
 					if (health < 100)
@@ -119,8 +117,8 @@ namespace PlayerInfo
 				NetMessage.SendData(16, -1, -1, null, iPlayer.Index, 0f, 0f, 0f, 0); // Sends Health Packet
 				NetMessage.SendData(42, -1, -1, null, iPlayer.Index, 0f, 0f, 0f, 0); // Sends Mana Packet
 				args.Player.SendSuccessMessage(string.Format("The Player's Stats have been set!"));
-				iPlayer.SendSuccessMessage(string.Format("Your Stats have been modified!"))
-			}
+                iPlayer.SendSuccessMessage(string.Format("Your Stats have been modified!"));
+            }
 		}
 		void SelfName(CommandArgs args)
 		{
@@ -132,7 +130,7 @@ namespace PlayerInfo
 				args.Player.SendErrorMessage("Invalid syntax! Proper syntax: /nick <newname>");
 				return;
 			}
-			string newName = String.Join(" ", args.Parameters).Trim();
+            string newName = string.Join(" ", args.Parameters).Trim();
 
 			#region Checks
 			if (newName.Length < 2)
@@ -155,12 +153,10 @@ namespace PlayerInfo
 			}
 			#endregion Checks
 
-			string oldname = plr.TPlayer.name;
+			string oldName = plr.TPlayer.name;
 			plr.TPlayer.name = newName;
-			TShock.Utils.Broadcast(string.Format("{0} has changed his name to {1}.", oldname, newName), Color.DeepPink);
+			TShock.Utils.Broadcast(string.Format("{0} has changed his name to {1}.", oldName, newName), Color.DeepPink);
 			plr.SendData(PacketTypes.PlayerInfo, newName, plr.Index);
 		}
 	}
 }
-
-
